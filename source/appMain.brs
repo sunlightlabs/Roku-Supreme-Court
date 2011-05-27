@@ -30,10 +30,12 @@ End Sub
 
 Function ShowCategories()
     cats = [{ Title: "Arguments Before the Court",
+              ShortDescriptionLine1: "Arguments Before the Court",
               HDPosterUrl: "pkg:/images/category_poster_304x237_house.jpg",
               SDPosterUrl: "pkg:/images/category_poster_304x237_house.jpg",
             },
             { Title: "Supreme Court Opinions",
+              ShortDescriptionLine1: "Supreme Court Opinions",
               HDPosterUrl: "pkg:/images/category_poster_304x237_senate.jpg",
               SDPosterUrl: "pkg:/images/category_poster_304x237_senate.jpg",
             }]
@@ -50,52 +52,75 @@ Function ShowCategories()
         if type(msg) = "roPosterScreenEvent" then
             if msg.isListItemSelected() then
                 if msg.GetIndex() = 0 then
-                   FetchArguments()
+                   FetchContent("arguments")
 
                 elseif msg.GetIndex() = 1 then
-                    FetchOpinions()
+                    FetchContent("opinions")
                 end if
             end if
         end if
     end while
-
-            
-                
-
 End Function
-Function FetchArguments()
-   
+
+Function FetchContent( content_type )
+    waitobj = ShowPleaseWait("Retrieving...", "")
     screen = CreateObject("roPosterScreen")
     port = CreateObject("roMessagePort")
+
+    if content_type = "arguments" then
+        name = "Arguments"
+        url_suffix = "podcast"
+        start_index = 1
+
+    elseif content_type = "opinions" then
+        name = "Opinions"
+        url_suffix = "podcast-decisions"
+        start_index = 2
+    endif
+
     screen.SetMessagePort(port)
     screen.SetListStyle("flat-category")
-    screen.SetAdUrl("http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/banner_ad_sd_540x60.jpg", "http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/sunlight2_728x90_roku.jpg")
-    screen.SetAdDisplayMode("scale-to-fit")    
+ '   screen.SetAdUrl("http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/banner_ad_sd_540x60.jpg", "http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/sunlight2_728x90_roku.jpg")
+'    screen.SetAdDisplayMode("scale-to-fit")    
     screen.SetListNames(m.CaseYears)
-    screen.SetBreadcrumbText("Arguments", "")
-    args = GetArgumentsByYear(m.CaseYears[0])
+    screen.SetBreadcrumbText(name, "")
+    screen.SetFocusedList(start_index)
+    args = GetDataByYear(m.CaseYears[start_index], url_suffix)
     if args = invalid then
         args = [{ Title: "None"}]
         screen.SetContentList([{ShortDescriptionLine1:"No Content for this Year"}])
+    else
+        screen.SetContentList(args)
     endif
+    waitobj = invalid
     screen.show()
+    focused_item = start_index
 
     while true
        msg = wait(0, screen.GetMessagePort())
        if type(msg) = "roPosterScreenEvent" then
-            if msg.isListFocused() then
-                screen.SetBreadcrumbText("Arguments", m.CaseYears[msg.GetIndex()])
-                waitobj = ShowPleaseWait("Retrieving Arguments...", "")
-                args = GetArgumentsByYear(m.CaseYears[msg.GetIndex()])
-                if args <> invalid then 
-                    screen.SetContentList(args)
-                    waitobj = "nevermind"
-                    screen.show()
-                else
-                    screen.SetContentList([{ShortDescriptionLine1:"No Content for this Year"}])
-                    waitobj = "nevermind"
-                    screen.show()
+            print msg.GetMessage()
+            print msg.GetType()
+            if msg.isListSelected() then
+                if focused_item <> msg.GetIndex() then
+                    screen.SetBreadcrumbText(name, m.CaseYears[msg.GetIndex()])
+                    waitobj = ShowPleaseWait("Retrieving...", "")
+                    args = GetDataByYear(m.CaseYears[msg.GetIndex()], url_suffix)
+                    if args <> invalid then 
+                        screen.SetContentList(args)
+                        screen.SetFocusedListItem(0)
+                        waitobj = "nevermind"
+                        screen.show()
+                    else
+                        screen.SetContentList([{ShortDescriptionLine1:"No Content for this Year"}])
+                        waitobj = "nevermind"
+                        screen.show()
+                    endif
+                    focused_item = msg.GetIndex()
                 endif
+            else if msg.isListSelected() then
+                print "list selected"
+            
 
             else if msg.isListItemSelected() then
                 print "list item selected"
@@ -109,32 +134,34 @@ Function FetchArguments()
             else if msg.isScreenClosed() then
                 return -1
                 print "closed"
-            end if
+            endif
            
-        end If
+        endif
 
     end while
 
 End Function
 
 Function ShowSpringBoard(item)
-
+    waitobj = ShowPleaseWait("Loading...", "")
     springboard = CreateObject("roSpringboardScreen")
     port = CreateObject("roMessagePort")
-    springboard.AddButton(1, "Pause")
+    springboard.AddButton(1, "Play")
     springboard.SetMessagePort(port)
     springboard.SetContent(item)
-    springboard.SetProgressIndicatorEnabled(true)
+    'springboard.SetProgressIndicatorEnabled(true)
     springboard.SetDescriptionStyle("generic")
-    springboard.AllowNavRewind(true)
-    springboard.AllowNavFastForward(true)
+    springboard.SetStaticRatingEnabled(false)
+    'springboard.AllowNavRewind(true)
+    'springboard.AllowNavFastForward(true)
     player = CreateObject("roAudioPlayer")
+    waitobj = invalid
+    springboard.Show()
+    'waitobj = ShowPleaseWait("Loading...", "")
+'    player.Play()
+    'waitobj = "nevermind"
     player.SetContentList([item])
     player.SetMessagePort(port)
-    waitobj = ShowPleaseWait("Loading...", "")
-    player.Play()
-    springboard.Show()
-    waitobj = "nevermind"
     print item.url
     print item.title
 
@@ -145,31 +172,32 @@ Function ShowSpringBoard(item)
                 return -1
             elseif msg.isButtonPressed() then
                 if msg.GetIndex() = 1 then
-                    player.Pause()
+                    player.Play()
                     springboard.ClearButtons()
-                    springboard.AddButton(2, "Resume")
+                    springboard.AddButton(2, "Pause")
                     springboard.Show()
 
                 elseif msg.GetIndex() = 2 then
-                    player.Resume()
+                    player.Pause()
                     springboard.ClearButtons()
-                    springboard.AddButton(1, "Pause")
+                    springboard.AddButton(3, "Resume")
                     springboard.Show()
-                    
+                elseif msg.GetIndex() = 3 then
+                    player.Resume()        
+                    springboard.ClearButtons()
+                    springboard.AddButton(2, "Pause")
+                    springboard.Show()
                 endif
-    
             endif
-        
         endif
-
     end while
 
 End Function
 
 
-Function GetArgumentsByYear(year)
+Function GetDataByYear(year, url_suffix)
         
-        url = "www.oyez.org/cases/" + year + "/podcast"
+        url = "www.oyez.org/cases/" + year + "/" + url_suffix
         http = NewHttp(url)
         response = http.GetToStringWithRetry()
         xml = CreateObject("roXMLElement")
@@ -191,6 +219,7 @@ Function GetArgumentsByYear(year)
                     SDPosterUrl:"pkg:/images/video_clip_poster_sd_185x94.jpg",
                     HDPosterUrl:"pkg:/images/video_clip_poster_hd250x141.jpg"
                     }
+
             args.Push(obj)
         endfor
         if args.Count() = 0 then 
