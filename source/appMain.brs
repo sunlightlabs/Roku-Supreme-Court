@@ -15,14 +15,15 @@ Sub SetTheme()
 
     app = CreateObject("roAppManager")
     theme = CreateObject("roAssociativeArray")
-    
+    print "in set theme"
     theme.OverhangOffsetSD_X = "0"
     theme.OverhangOffsetSD_Y = "0"
+    theme.OverhangSliceSD = "pkg:/images/overhang_background_sd_720x83.jpg"
     theme.OverhangOffsetHD_Y = "0"
     theme.OverhangOffsetHD_X = "0"
     theme.OverhangSliceHD = "pkg:/images/overhang_background_hd_1281x165.jpg"
-    theme.overhandSliceSD = "pjg:/images/overhang_background_sd_720x83.jpg"
-    theme.BreadcrumbTextRight = "#E8BB4B"
+    theme.BreadcrumbTextRight = "#FFFFFF"
+    theme.BreadcrumbTextLeft = "#FFFFFF"
     theme.BackgroundColor = "#FFFFFF"
     app.SetTheme(theme)
 
@@ -44,7 +45,7 @@ Function ShowCategories()
     screen.SetMessagePort(port)
     screen.SetListStyle("arced-landscape")
     screen.SetAdUrl("http://sunlightlabs.s3.amazonaws.com/OyezCredit_sd_540X60.jpg", "http://sunlightlabs.s3.amazonaws.com/OyezCredit_728X90.jpg")
-    screen.SetAdDisplayMode("scale-to-fit")   
+    screen.SetAdDisplayMode("scale-to-fill")   
     screen.SetContentList(cats)
     screen.Show()
     while true    
@@ -79,11 +80,9 @@ Function FetchContent( content_type )
     endif
 
     screen.SetMessagePort(port)
-    screen.SetListStyle("flat-category")
- '   screen.SetAdUrl("http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/banner_ad_sd_540x60.jpg", "http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/sunlight2_728x90_roku.jpg")
-'    screen.SetAdDisplayMode("scale-to-fit")    
+    screen.SetListStyle("flat-episodic-16x9")
     screen.SetListNames(m.CaseYears)
-    screen.SetBreadcrumbText(name, "")
+    screen.SetBreadcrumbText(name, m.CaseYears[start_index])
     screen.SetFocusedList(start_index)
     args = GetDataByYear(m.CaseYears[start_index], url_suffix)
     if args = invalid then
@@ -99,8 +98,6 @@ Function FetchContent( content_type )
     while true
        msg = wait(0, screen.GetMessagePort())
        if type(msg) = "roPosterScreenEvent" then
-            print msg.GetMessage()
-            print msg.GetType()
             if msg.isListSelected() then
                 if focused_item <> msg.GetIndex() then
                     screen.SetBreadcrumbText(name, m.CaseYears[msg.GetIndex()])
@@ -149,21 +146,14 @@ Function ShowSpringBoard(item)
     springboard.AddButton(1, "Play")
     springboard.SetMessagePort(port)
     springboard.SetContent(item)
-    'springboard.SetProgressIndicatorEnabled(true)
     springboard.SetDescriptionStyle("generic")
+    springboard.SetPosterStyle("rounded-rect-16x9-generic")
     springboard.SetStaticRatingEnabled(false)
-    'springboard.AllowNavRewind(true)
-    'springboard.AllowNavFastForward(true)
     player = CreateObject("roAudioPlayer")
     waitobj = invalid
     springboard.Show()
-    'waitobj = ShowPleaseWait("Loading...", "")
-'    player.Play()
-    'waitobj = "nevermind"
     player.SetContentList([item])
     player.SetMessagePort(port)
-    print item.url
-    print item.title
 
     while true
         msg = wait(0, port)
@@ -210,9 +200,9 @@ Function GetDataByYear(year, url_suffix)
         for each item in xml.channel.item
             print item.title.getText()
             obj = { Title : item.title.GetText(),
-                    Description : item.description.GetText(),
+                    Description : Left(item.description.GetText(), 311),
                     ShortDescriptionLine1: item.title.GetText(),
-                    ShortDescriptionLine2: item.description.GetText(),
+                   ' ShortDescriptionLine2: item.description.GetText(),
                     Url : item.enclosure@url,
                     StreamFormat : "mp3",
                     ContentType: "audio",
