@@ -31,19 +31,19 @@ End Sub
 Function ShowCategories()
     cats = [{ Title: "Arguments Before the Court",
               ShortDescriptionLine1: "Arguments Before the Court",
-              HDPosterUrl: "pkg:/images/category_poster_304x237_house.jpg",
-              SDPosterUrl: "pkg:/images/category_poster_304x237_house.jpg",
+              HDPosterUrl: "pkg:/images/category_poster_304x237_arguments.jpg",
+              SDPosterUrl: "pkg:/images/category_poster_304x237_arguments.jpg",
             },
             { Title: "Supreme Court Opinions",
               ShortDescriptionLine1: "Supreme Court Opinions",
-              HDPosterUrl: "pkg:/images/category_poster_304x237_senate.jpg",
-              SDPosterUrl: "pkg:/images/category_poster_304x237_senate.jpg",
+              HDPosterUrl: "pkg:/images/category_poster_304x237_opinions.jpg",
+              SDPosterUrl: "pkg:/images/category_poster_304x237_opinions.jpg",
             }]
     screen = CreateObject("roPosterScreen")
     port = CreateObject("roMessagePort")
     screen.SetMessagePort(port)
     screen.SetListStyle("arced-landscape")
-    screen.SetAdUrl("http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/banner_ad_sd_540x60.jpg", "http://assets.sunlightfoundation.com.s3.amazonaws.com/roku/sunlight2_728x90_roku.jpg")
+    screen.SetAdUrl("http://sunlightlabs.s3.amazonaws.com/OyezCredit_sd_540X60.jpg", "http://sunlightlabs.s3.amazonaws.com/OyezCredit_728X90.jpg")
     screen.SetAdDisplayMode("scale-to-fit")   
     screen.SetContentList(cats)
     screen.Show()
@@ -216,8 +216,8 @@ Function GetDataByYear(year, url_suffix)
                     Url : item.enclosure@url,
                     StreamFormat : "mp3",
                     ContentType: "audio",
-                    SDPosterUrl:"pkg:/images/video_clip_poster_sd_185x94.jpg",
-                    HDPosterUrl:"pkg:/images/video_clip_poster_hd250x141.jpg"
+                    SDPosterUrl:"pkg:/images/audio_clip_poster_sd_185x94.jpg",
+                    HDPosterUrl:"pkg:/images/full_stream_poster_hd_250x141.jpg"
                     }
 
             args.Push(obj)
