@@ -162,6 +162,7 @@ Function ShowSpringBoard(item)
                 return -1
             elseif msg.isButtonPressed() then
                 if msg.GetIndex() = 1 then
+                    analytics("audiostart-rokusupremecourt", "")
                     player.Play()
                     springboard.ClearButtons()
                     springboard.AddButton(2, "Pause")
@@ -218,6 +219,32 @@ Function GetDataByYear(year, url_suffix)
         else
             return args
         endif
+End Function
+
+
+Function analytics(hit_type, video_id)
+    
+    utmac = getGAKey()
+    utmhn = "roku.sunlightfoundation.com"
+    utmn = itostr(rnd(9999999999))
+    cookie = itostr(rnd(99999999))
+    random_num = itostr(rnd(2147483647))
+    todayobj = CreateObject("roDateTime")
+    today = itostr(todayobj.getHours() * 60 * 60) + itostr(todayobj.getMinutes() * 60)
+    referer = "http://rokudevice.com"
+    device_info = CreateObject("roDeviceInfo")
+    uservar = "device_id_" + device_info.GetDeviceUniqueId()
+    uservar2 = "dt_" + device_info.getdisplayType()  
+    uservar3 = "vid_" + video_id
+    utmp = "/roku/" + hit_type + "/" + uservar3
+
+    url = HttpEncode("http://www.google-analytics.com/__utm.gif?utmwv=1&utmn="+utmn+"&utmsr=-&utmsc=-&utmul=-&utmje=0&utmfl=-&utmdt=-&utmhn="+utmhn+"&utmr="+referer+"&utmp="+utmp+"&utmac="+utmac+"&utmcc=__utma%3D"+cookie+"."+random_num+"."+today+"."+today+"."+today+".2%3B%2B__utmb%3D"+cookie+"%3B%2B__utmc%3D"+cookie+"%3B%2B__utmz%3D"+cookie+"."+today+".2.2.utmccn%3D(direct)%7Cutmcsr%3D(direct)%7Cutmcmd%3D(none)%3B%2B__utmv%3D"+cookie+"."+uservar+"%3B"+"."+uservar2+"%3B."+uservar3)
+
+    print "posting to " + url 
+    http = NewHttp(url)
+    response = http.GetToStringWithRetry()
+
+    
 End Function
 
 
